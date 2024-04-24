@@ -1,33 +1,21 @@
 {{
-   config(
-     materialized='view'
-   )
+config(
+materialized='view'
+)
 }}
 
 WITH customers AS (
-    SELECT
-        id AS customer_id,
-        first_name,
-        last_name
-    FROM dbt_postgresql.jaffle_shop.jaffle_shop_customers
+    SELECT * FROM {{ ref('stg_customers') }}
 ),
+
 orders AS (
-    SELECT
-        id AS order_id,
-        user_id as customer_id,
-        order_date,
-        status
-    FROM dbt_postgresql.jaffle_shop.jaffle_shop_orders
+    SELECT * FROM {{ ref('stg_orders') }}
 ),
+
 payments AS (
-    SELECT
-        id AS payment_id,
-        order_id AS order_id,
-        paymentmethod AS payment_type,
-        amount
-    FROM dbts3.land_jaffle_shop.stripe_payments
-    WHERE paymentmethod = 'gift_card' AND status = 'success'
+    SELECT * FROM {{ ref('stg_payments') }}
 ),
+
 customer_orders AS (
     SELECT
         p.payment_type,
@@ -53,4 +41,5 @@ final AS (
     FROM customers
     JOIN customer_orders ON customers.customer_id = customer_orders.customer_id
 )
+
 SELECT * FROM final
